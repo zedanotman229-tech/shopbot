@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-🛒 بوت متجر المنتجات الإلكترونية
-Telegram Shop Bot - Full Featured
+🛒 بوت متجر المنتجات الإلكترونية - النسخة الليبية
+Telegram Shop Bot - Full Featured (LYD Version)
 """
 
 import logging
@@ -35,6 +35,526 @@ AWAIT_PRODUCT_NAME = 2
 AWAIT_PRODUCT_PRICE = 3
 AWAIT_PRODUCT_DESC = 4
 AWAIT_ORDER_ID = 5
+
+# ─── قاعدة البيانات المحلية ──────────────────────────────────────
+def load_data():
+    """تحميل البيانات من الملف"""
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return {
+        "products": {
+            "p1": {
+                "name": "⚡ Windows 11 Pro",
+                "description": "مفتاح تفعيل أصلي مدى الحياة",
+                "price": 120.00,
+                "currency": "LYD",
+                "category": "أنظمة التشغيل",
+                "available": True,
+                "image": ""
+            },
+            "p2": {
+                "name": "🎨 Adobe Photoshop CC",
+                "description": "اشتراك سنوي كامل الميزات",
+                "price": 250.00,
+                "currency": "LYD",
+                "category": "برامج التصميم",
+                "available": True,
+                "image": ""
+            },
+            "p3": {
+                "name": "🎮 كرت ستيم 50 دولار",
+                "description": "بطاقة رصيد ستيم أمريكي",
+                "price": 265.00,
+                "currency": "LYD",
+                "category": "العاب",
+                "available": True,
+                "image": ""
+            }
+        },
+        "orders": {},
+        "settings": {
+            "payment_methods": {
+                "libyana": {"enabled": True, "title": "📱 رصيد ليبيانا", "phone": "0920000000"},
+                "bank_transfer": {"enabled": True, "title": "🏛️ تحويل مصرفي", "bank_name": "الجمهورية / التجاري الوطني", "account_name": "اسم صاحب الحساب", "account_num": "0000-000000-000"},
+                "usdt": {"enabled": False, "address": "YOUR_USDT_ADDRESS", "network": "TRC20"}
+            },
+            "welcome_message": "مرحباً بك في متجرنا الإلكتروني! 🛒",
+            "order_counter": 1000
+        }
+    }
+
+def save_data(data):
+    """حفظ البيانات في الملف"""
+    with open(DATA_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+# ─── دوال مساعدة ─────────────────────────────────────────────────
+def is_admin(user_id: int) -> bool:
+    return user_id in ADMIN_IDS
+
+def get_order_id(data):
+    data["settings"]["order_counter"] += 1
+    save_data(data)
+    return f"ORD-{data['settings']['order_counter']}"
+
+def format_price(price, currency="د.ل"):
+    return f"{price:.2f} {currency}"
+
+# ─── لوحة المفاتيح الرئيسية ──────────────────────────────────────
+def main_keyboard():
+    return ReplyKeyboardMarkup([
+        ["🛍️ المنتجات", "🛒 سلة المشتريات"],
+        ["📦 طلباتي", "💬 الدعم الفني"],
+        ["ℹ️ من نحن", "⚙️ إعدادات"]
+    ], resize_keyboard=True, input_field_placeholder="اختر من القائمة...")
+
+def admin_keyboard():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("📦 إدارة المنتجات", callback_data="admin_products")],
+        [InlineKeyboardButton("📋 الطلبات المعلقة", callback_data="admin_orders"),
+         InlineKeyboardButton("✅ تأكيد دفع", callback_data="admin_confirm")],
+        [InlineKeyboardButton("⚙️ الإعدادات", callback_data="admin_settings"),
+         InlineKeyboardButton("📊 الإحصائيات", callback_data="admin_stats")]
+    ])
+
+# ─── أوامر البوت ─────────────────────────────────────────────────
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """أمر البداية"""
+    data = load_data()
+    user = update.effective_user
+    welcome = data["settings"]["welcome_message"]
+    
+    text = (
+        f"👋 أهلاً وسهلاً *{user.first_name}*!\n\n"
+        f"{welcome}\n\n"
+        "━━━━━━━━━━━━━━━━\n"
+        "🌟 نوفر لك أفضل المنتجات الرقمية بأسعار منافسة\n"
+        "⚡ تسليم فوري بعد تأكيد الدفع\n"
+        "🔒 ضمان كامل للمنتجات الرقمية\n"
+        "━━━━━━━━━━━━━━━━\n\n"
+        "اختر من القائمة أدناه 👇"
+    )
+    
+    await update.message.reply_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=main_keyboard()
+    )
+
+async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """لوحة تحكم المدير"""
+    if not is_admin(update.effective_user.id):
+        await update.message.reply_text("⛔ ليس لديك صلاحية للوصول إلى هذه الصفحة.")
+        return
+    
+    data = load_data()
+    orders = data.get("orders", {})
+    pending = sum(1 for o in orders.values() if o["status"] == "pending")
+    confirmed = sum(1 for o in orders.values() if o["status"] == "confirmed")
+    
+    text = (
+        "🎛️ *لوحة التحكم الإدارية*\n"
+        "━━━━━━━━━━━━━━━━\n"
+        f"📦 المنتجات: {len(data['products'])}\n"
+        f"📋 الطلبات المعلقة: {pending}\n"
+        f"✅ الطلبات المؤكدة: {confirmed}\n"
+        f"📊 إجمالي الطلبات: {len(orders)}\n"
+        "━━━━━━━━━━━━━━━━"
+    )
+    
+    await update.message.reply_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=admin_keyboard()
+    )
+
+# ─── عرض المنتجات ────────────────────────────────────────────────
+async def show_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """عرض قائمة المنتجات"""
+    data = load_data()
+    products = data["products"]
+    
+    categories = {}
+    for pid, product in products.items():
+        cat = product["category"]
+        if cat not in categories:
+            categories[cat] = []
+        categories[cat].append((pid, product))
+    
+    keyboard = []
+    for cat, items in categories.items():
+        keyboard.append([InlineKeyboardButton(f"📁 {cat}", callback_data=f"cat_{cat}")])
+    keyboard.append([InlineKeyboardButton("🔄 عرض الكل", callback_data="all_products")])
+    
+    await update.message.reply_text(
+        "🛍️ *اختر الفئة*\n\nتصفح منتجاتنا حسب الفئة:",
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+async def show_all_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """عرض كل المنتجات"""
+    query = update.callback_query
+    await query.answer()
+    
+    data = load_data()
+    products = data["products"]
+    keyboard = []
+    
+    for pid, product in products.items():
+        status = "✅" if product["available"] else "❌"
+        keyboard.append([
+            InlineKeyboardButton(
+                f"{status} {product['name']} - {format_price(product['price'])}",
+                callback_data=f"product_{pid}"
+            )
+        ])
+    
+    keyboard.append([InlineKeyboardButton("🔙 رجوع", callback_data="back_main")])
+    
+    await query.edit_message_text(
+        "🛍️ *جميع المنتجات*",
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+async def show_product_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """عرض تفاصيل منتج"""
+    query = update.callback_query
+    await query.answer()
+    
+    pid = query.data.replace("product_", "")
+    data = load_data()
+    product = data["products"].get(pid)
+    
+    if not product:
+        await query.edit_message_text("❌ المنتج غير موجود.")
+        return
+    
+    status = "✅ متوفر" if product["available"] else "❌ غير متوفر"
+    text = (
+        f"🏷️ *{product['name']}*\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"📝 {product['description']}\n"
+        f"📁 الفئة: {product['category']}\n"
+        f"💰 السعر: *{format_price(product['price'])}*\n"
+        f"📊 الحالة: {status}\n"
+        f"━━━━━━━━━━━━━━━━"
+    )
+    
+    keyboard = []
+    if product["available"]:
+        keyboard.append([InlineKeyboardButton("🛒 أضف للسلة", callback_data=f"add_cart_{pid}")])
+    keyboard.append([InlineKeyboardButton("🔙 رجوع", callback_data="all_products")])
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+# ─── السلة ───────────────────────────────────────────────────────
+async def add_to_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """إضافة للسلة"""
+    query = update.callback_query
+    pid = query.data.replace("add_cart_", "")
+    data = load_data()
+    product = data["products"].get(pid)
+    
+    if not context.user_data.get("cart"):
+        context.user_data["cart"] = []
+    
+    context.user_data["cart"].append({
+        "pid": pid,
+        "name": product["name"],
+        "price": product["price"]
+    })
+    
+    await query.answer(f"✅ تمت إضافة {product['name']} للسلة!", show_alert=True)
+
+async def show_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """عرض السلة"""
+    cart = context.user_data.get("cart", [])
+    
+    if not cart:
+        await update.message.reply_text(
+            "🛒 *السلة فارغة*\n\nتفضل بتصفح المنتجات وأضف ما يعجبك!",
+            parse_mode='Markdown',
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🛍️ تصفح المنتجات", callback_data="all_products")]
+            ])
+        )
+        return
+    
+    total = sum(item["price"] for item in cart)
+    text = "🛒 *محتويات السلة*\n━━━━━━━━━━━━━━━━\n"
+    
+    for i, item in enumerate(cart, 1):
+        text += f"{i}. {item['name']} - {format_price(item['price'])}\n"
+    
+    text += f"━━━━━━━━━━━━━━━━\n💰 *المجموع: {format_price(total)}*"
+    
+    keyboard = [
+        [InlineKeyboardButton("💳 إتمام الشراء", callback_data="checkout")],
+        [InlineKeyboardButton("🗑️ تفريغ السلة", callback_data="clear_cart")],
+        [InlineKeyboardButton("🛍️ متابعة التسوق", callback_data="all_products")]
+    ]
+    
+    await update.message.reply_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+# ─── الدفع ───────────────────────────────────────────────────────
+async def checkout(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """إتمام الشراء واختيار وسيلة الدفع"""
+    query = update.callback_query
+    await query.answer()
+    
+    data = load_data()
+    payment = data["settings"]["payment_methods"]
+    
+    keyboard = []
+    if payment.get("libyana", {}).get("enabled"):
+        keyboard.append([InlineKeyboardButton("📱 رصيد ليبيانا", callback_data="pay_libyana")])
+    if payment.get("bank_transfer", {}).get("enabled"):
+        keyboard.append([InlineKeyboardButton("🏛️ تحويل مصرفي / تطبيق بنكي", callback_data="pay_bank")])
+    if payment.get("usdt", {}).get("enabled"):
+        keyboard.append([InlineKeyboardButton("💰 USDT (TRC20)", callback_data="pay_usdt")])
+        
+    keyboard.append([InlineKeyboardButton("🔙 رجوع للسلة", callback_data="back_cart")])
+    
+    await query.edit_message_text(
+        "💳 *اختر طريقة الدفع المناسبة لك*\n\nنقبل الطرق التالية داخل ليبيا:",
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+async def show_payment_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """عرض تفاصيل الدفع بناءً على الخيار"""
+    query = update.callback_query
+    await query.answer()
+    
+    method = query.data.replace("pay_", "")
+    data = load_data()
+    payment = data["settings"]["payment_methods"]
+    cart = context.user_data.get("cart", [])
+    total = sum(item["price"] for item in cart)
+    
+    order_id = get_order_id(data)
+    order = {
+        "id": order_id,
+        "user_id": query.from_user.id,
+        "username": query.from_user.username or query.from_user.first_name,
+        "items": cart,
+        "total": total,
+        "payment_method": method,
+        "status": "pending",
+        "created_at": datetime.now().isoformat(),
+        "confirmed_at": None
+    }
+    
+    data["orders"][order_id] = order
+    save_data(data)
+    context.user_data["current_order"] = order_id
+    
+    if method == "libyana":
+        pay_info = payment["libyana"]
+        text = (
+            f"📱 *الدفع عن طريق تحويل رصيد ليبيانا*\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"🔢 رقم الطلب: `{order_id}`\n"
+            f"💵 القيمة المطلوبة: *{format_price(total)}*\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"📞 يرجى تحويل الرصيد إلى الرقم التالي:\n`{pay_info['phone']}`\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"⚠️ *مهم جداً:* بعد إتمام عملية التحويل، اضغط على الزر بالأسفل وأرسل صورة الشاشة المأخوذة لعملية التحويل الناجحة لتأكيد طلبك."
+        )
+    elif method == "bank":
+        pay_info = payment["bank_transfer"]
+        text = (
+            f"🏛️ *الدفع عبر التحويل المصرفي / التطبيقات البنكية*\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"🔢 رقم الطلب: `{order_id}`\n"
+            f"💵 القيمة المطلوبة: *{format_price(total)}*\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"🏦 المصارف المتاحة: {pay_info['bank_name']}\n"
+            f"👤 اسم الحساب: `{pay_info['account_name']}`\n"
+            f"💳 رقم الحساب / الـ IBAN:\n`{pay_info['account_num']}`\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"💡 يمكنك استخدام تطبيقات (موبي كاش، بنكي، ونيس، إلخ) للتحويل.\n"
+            f"⚠️ *مهم:* يرجى إرسال لقطة شاشة لإيصال التحويل الناجح."
+        )
+    else:  # USDT الخيار الإضافي المتبقي
+        pay_info = payment["usdt"]
+        text = (
+            f"💰 *الدفع بـ USDT*\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"🔢 رقم الطلب: `{order_id}`\n"
+            f"💵 المبلغ: *{format_price(total, 'USD')}*\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"📱 الشبكة: {pay_info['network']}\n"
+            f"📋 العنوان:\n`{pay_info['address']}`\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"⚠️ أرسل لقطة الشاشة بعد التحويل الفوري."
+        )
+    
+    keyboard = [
+        [InlineKeyboardButton("📸 أرسل إثبات الدفع", callback_data="send_proof")],
+        [InlineKeyboardButton("🔙 رجوع", callback_data="checkout")]
+    ]
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    
+    # إشعار للمشرفين بوجود طلب جديد
+    for admin_id in ADMIN_IDS:
+        try:
+            await context.bot.send_message(
+                admin_id,
+                f"🔔 *طلب جديد قيد الانتظار!*\n"
+                f"━━━━━━━━━━━━━━━━\n"
+                f"📋 رقم الطلب: `{order_id}`\n"
+                f"👤 المستخدم: @{order['username']}\n"
+                f"💰 القيمة: {format_price(total)}\n"
+                f"💳 وسيلة الدفع المحددة: {method}\n"
+                f"━━━━━━━━━━━━━━━━",
+                parse_mode='Markdown'
+            )
+        except:
+            pass
+
+async def request_payment_proof(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """طلب إثبات الدفع"""
+    query = update.callback_query
+    await query.answer()
+    
+    await query.edit_message_text(
+        "📸 *إرسال إثبات الدفع*\n\n"
+        "يرجى الآن إرسال صورة أو لقطة شاشة (Screenshot) واضحة لإيصال التحويل أو كشف نجاح العملية.\n"
+        "سيقوم الدعم الفني بمراجعتها وتأكيد الطلب فوراً. ⏱️",
+        parse_mode='Markdown'
+    )
+    return AWAIT_PAYMENT_PROOF
+
+async def receive_payment_proof(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """استلام إثبات الدفع"""
+    order_id = context.user_data.get("current_order")
+    data = load_data()
+    
+    if order_id and order_id in data["orders"]:
+        data["orders"][order_id]["proof_received"] = True
+        data["orders"][order_id]["status"] = "awaiting_confirmation"
+        save_data(data)
+    
+    await update.message.reply_text(
+        "✅ *تم استلام إثبات الدفع بنجاح!*\n\n"
+        f"📋 رقم طلبك هو: `{order_id}`\n"
+        "⏱️ جاري مراجعة الإيصال من قبل الإدارة، وسيتم إرسال المنتج لك في أقرب وقت.\n\n"
+        "شكراً لتعاملك معنا! 🙏",
+        parse_mode='Markdown',
+        reply_markup=main_keyboard()
+    )
+    
+    caption = (
+        f"📸 *إثبات دفع جديد للمراجعة!*\n"
+        f"📋 رقم الطلب: `{order_id}`\n"
+        f"👤 الحساب: @{update.effective_user.username or update.effective_user.first_name}"
+    )
+    
+    for admin_id in ADMIN_IDS:
+        try:
+            if update.message.photo:
+                await context.bot.send_photo(
+                    admin_id,
+                    update.message.photo[-1].file_id,
+                    caption=caption,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("✅ تأكيد الطلب تسليم", callback_data=f"confirm_{order_id}")],
+                        [InlineKeyboardButton("❌ رفض وإلغاء", callback_data=f"reject_{order_id}")]
+                    ])
+                )
+            elif update.message.document:
+                await context.bot.send_document(
+                    admin_id,
+                    update.message.document.file_id,
+                    caption=caption,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("✅ تأكيد الطلب تسليم", callback_data=f"confirm_{order_id}")],
+                        [InlineKeyboardButton("❌ رفض وإلغاء", callback_data=f"reject_{order_id}")]
+                    ])
+                )
+        except Exception as e:
+            logger.error(f"Failed to notify admin: {e}")
+    
+    context.user_data["cart"] = []
+    return ConversationHandler.END
+
+# ─── تأكيد/رفض الطلبات (للمدير) ─────────────────────────────────
+async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    if not is_admin(query.from_user.id):
+        await query.answer("⛔ ليس لديك صلاحية!", show_alert=True)
+        return
+    
+    order_id = query.data.replace("confirm_", "")
+    data = load_data()
+    order = data["orders"].get(order_id)
+    
+    if not order:
+        await query.answer("❌ الطلب غير موجود!", show_alert=True)
+        return
+    
+    order["status"] = "confirmed"
+    order["confirmed_at"] = datetime.now().isoformat()
+    order["confirmed_by"] = query.from_user.id
+    save_data(data)
+    
+    await query.answer("✅ تم تأكيد الطلب!")
+    await query.edit_message_caption(
+        f"{query.message.caption}\n\n✅ *تم التأكيد والقبول بواسطة @{query.from_user.username}*",
+        parse_mode='Markdown'
+    )
+    
+    items_text = "\n".join([f"• {i['name']}" for i in order["items"]])
+    try:
+        await context.bot.send_message(
+            order["user_id"],
+            f"🎉 *أخبار سارة! تم تأكيد دفع طلبك!*\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"📋 رقم الطلب: `{order_id}`\n"
+            f"📦 المنتجات المشتراة:\n{items_text}\n"
+            f"━━━━━━━━━━━━━━━━\n"
+            f"⚡ سيقوم الدعم الفني بإرسال الأكواد/الروابط الخاصة بك هنا مباشرة الآن.\n"
+            f"شكراً لثقتك بنا وبخدماتنا! 🙏",
+            parse_mode='Markdown'
+        )
+    except Exception as e:
+        logger.error(f"Failed to notify user: {e}")
+
+async def reject_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    if not is_admin(query.from_user.id):
+        await query.answer("⛔ ليس لديك صلاحية!", show_alert=True)
+        return
+    
+    order_id = query.data.replace("reject_", "")
+    data = load_data()
+    order = data["orders"].get(order_id)
+    
+    if order:
+        order["status"] = "rejected"
+        save_data(data)
+    
+    await query.answer("❌ تم رفض الطلب!")
+    await query.edit_message_cAWAIT_ORDER_ID = 5
 
 # ─── قاعدة البيانات المحلية ──────────────────────────────────────
 def load_data():
