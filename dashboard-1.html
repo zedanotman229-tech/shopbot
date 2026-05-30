@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛒 لوحة تحكم المتجر</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2234;
+    --accent: #3b82f6;
+    --accent2: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --border: #1e293b;
+    --glow: 0 0 20px rgba(59,130,246,0.3);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Tajawal',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    position:fixed; right:0; top:0; width:240px; height:100vh;
+    background:var(--surface); border-left:1px solid var(--border);
+    display:flex; flex-direction:column; z-index:100;
+  }
+  .logo {
+    padding:24px 20px; border-bottom:1px solid var(--border);
+    font-size:20px; font-weight:900; color:var(--accent);
+    display:flex; align-items:center; gap:10px;
+  }
+  .logo span { font-size:28px; }
+  .nav { padding:16px 12px; flex:1; }
+  .nav-item {
+    display:flex; align-items:center; gap:12px;
+    padding:12px 16px; border-radius:10px; cursor:pointer;
+    color:var(--text2); font-size:15px; font-weight:500;
+    transition:all 0.2s; margin-bottom:4px;
+  }
+  .nav-item:hover, .nav-item.active {
+    background:rgba(59,130,246,0.15); color:var(--accent);
+  }
+  .nav-item .icon { font-size:18px; width:24px; text-align:center; }
+
+  /* Main */
+  .main { margin-right:240px; padding:32px; min-height:100vh; }
+  .topbar {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:32px;
+  }
+  .page-title { font-size:24px; font-weight:900; }
+  .page-title span { color:var(--accent); }
+  .status-badge {
+    display:flex; align-items:center; gap:8px;
+    background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3);
+    color:var(--accent2); padding:8px 16px; border-radius:20px; font-size:13px;
+  }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--accent2); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* Stats */
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
+  .stat-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:24px; position:relative; overflow:hidden;
+    transition:transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover { transform:translateY(-2px); box-shadow:var(--glow); }
+  .stat-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  }
+  .stat-card.blue::before { background:var(--accent); }
+  .stat-card.green::before { background:var(--accent2); }
+  .stat-card.yellow::before { background:var(--warning); }
+  .stat-card.red::before { background:var(--danger); }
+  .stat-icon { font-size:32px; margin-bottom:12px; }
+  .stat-value { font-size:32px; font-weight:900; margin-bottom:4px; }
+  .stat-label { color:var(--text2); font-size:13px; }
+
+  /* Sections */
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+  .card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; overflow:hidden;
+  }
+  .card-header {
+    padding:20px 24px; border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .card-title { font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .card-body { padding:24px; }
+
+  /* Tabs */
+  .tabs { display:flex; gap:4px; background:var(--surface2); padding:4px; border-radius:12px; margin-bottom:24px; }
+  .tab {
+    flex:1; padding:10px; border-radius:8px; text-align:center;
+    cursor:pointer; font-size:14px; font-weight:600; color:var(--text2); transition:all 0.2s;
+  }
+  .tab.active { background:var(--accent); color:white; }
+
+  /* Forms */
+  .form-group { margin-bottom:16px; }
+  label { display:block; font-size:13px; color:var(--text2); margin-bottom:6px; font-weight:500; }
+  input, select, textarea {
+    width:100%; padding:10px 14px; background:var(--surface2);
+    border:1px solid var(--border); border-radius:10px;
+    color:var(--text); font-family:'Tajawal',sans-serif; font-size:14px;
+    transition:border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline:none; border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(59,130,246,0.1);
+  }
+  textarea { resize:vertical; min-height:80px; }
+
+  /* Buttons */
+  .btn {
+    padding:10px 20px; border-radius:10px; border:none; cursor:pointer;
+    font-family:'Tajawal',sans-serif; font-size:14px; font-weight:700;
+    transition:all 0.2s; display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn-primary { background:var(--accent); color:white; }
+  .btn-primary:hover { background:#2563eb; transform:translateY(-1px); }
+  .btn-success { background:var(--accent2); color:white; }
+  .btn-success:hover { background:#059669; }
+  .btn-danger { background:var(--danger); color:white; }
+  .btn-danger:hover { background:#dc2626; }
+  .btn-ghost { background:transparent; color:var(--text2); border:1px solid var(--border); }
+  .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-sm { padding:6px 14px; font-size:13px; }
+
+  /* Table */
+  table { width:100%; border-collapse:collapse; }
+  th { padding:12px 16px; text-align:right; font-size:12px; color:var(--text2); font-weight:600; border-bottom:1px solid var(--border); }
+  td { padding:14px 16px; font-size:14px; border-bottom:1px solid var(--border); }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,0.02); }
+
+  /* Badge */
+  .badge {
+    padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; display:inline-block;
+  }
+  .badge-success { background:rgba(16,185,129,0.15); color:var(--accent2); }
+  .badge-warning { background:rgba(245,158,11,0.15); color:var(--warning); }
+  .badge-danger { background:rgba(239,68,68,0.15); color:var(--danger); }
+  .badge-info { background:rgba(59,130,246,0.15); color:var(--accent); }
+
+  /* Toggle */
+  .toggle { position:relative; display:inline-block; width:44px; height:24px; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .slider {
+    position:absolute; cursor:pointer; inset:0; background:#374151;
+    border-radius:24px; transition:0.3s;
+  }
+  .slider:before {
+    content:''; position:absolute; height:18px; width:18px;
+    left:3px; bottom:3px; background:white; border-radius:50%; transition:0.3s;
+  }
+  input:checked + .slider { background:var(--accent2); }
+  input:checked + .slider:before { transform:translateX(20px); }
+
+  /* Product card */
+  .product-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+  .product-card {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:12px; padding:20px; transition:all 0.2s;
+  }
+  .product-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .product-name { font-size:15px; font-weight:700; margin-bottom:6px; }
+  .product-desc { font-size:13px; color:var(--text2); margin-bottom:12px; }
+  .product-price { font-size:20px; font-weight:900; color:var(--accent); margin-bottom:12px; }
+  .product-actions { display:flex; gap:8px; }
+
+  /* Modal */
+  .modal-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7);
+    z-index:200; justify-content:center; align-items:center;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:20px; padding:32px; width:90%; max-width:500px;
+    animation:slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal-title { font-size:20px; font-weight:900; margin-bottom:24px; display:flex; align-items:center; gap:10px; }
+  .modal-actions { display:flex; gap:12px; margin-top:24px; justify-content:flex-end; }
+
+  /* Toast */
+  .toast {
+    position:fixed; bottom:24px; left:24px; z-index:300;
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:12px; padding:14px 20px; font-size:14px; font-weight:600;
+    display:flex; align-items:center; gap:10px;
+    transform:translateY(100px); opacity:0; transition:all 0.3s;
+    box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.success { border-color:var(--accent2); color:var(--accent2); }
+  .toast.error { border-color:var(--danger); color:var(--danger); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:var(--surface); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* Loading */
+  .loading { text-align:center; padding:40px; color:var(--text2); }
+  .spinner { display:inline-block; width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* Responsive */
+  @media(max-width:768px) {
+    .sidebar { display:none; }
+    .main { margin-right:0; padding:16px; }
+    .stats { grid-template-columns:repeat(2,1fr); }
+    .grid2 { grid-template-columns:1fr; }
+  }
+
+  .section { display:none; }
+  .section.active { display:block; }
+
+  .input-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .divider { height:1px; background:var(--border); margin:20px 0; }
+  .empty { text-align:center; padding:40px; color:var(--text2); font-size:14px; }
+  .empty .empty-icon { font-size:48px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="logo"><span>🛒</span> لوحة المتجر</div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="showSection('dashboard')">
+      <span class="icon">📊</span> الرئيسية
+    </div>
+    <div class="nav-item" onclick="showSection('products')">
+      <span class="icon">📦</span> المنتجات
+    </div>
+    <div class="nav-item" onclick="showSection('orders')">
+      <span class="icon">📋</span> الطلبات
+    </div>
+    <div class="nav-item" onclick="showSection('payment')">
+      <span class="icon">💳</span> طرق الدفع
+    </div>
+    <div class="nav-item" onclick="showSection('settings')">
+      <span class="icon">⚙️</span> الإعدادات
+    </div>
+    <div class="nav-item" onclick="showSection('deploy')">
+      <span class="icon">🚀</span> النشر
+    </div>
+  </nav>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">لوحة <span>التحكم</span></div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <div class="status-badge"><div class="dot"></div> البوت يعمل</div>
+      <button class="btn btn-primary btn-sm" onclick="saveAll()">💾 حفظ التغييرات</button>
+    </div>
+  </div>
+
+  <!-- Dashboard Section -->
+  <div class="section active" id="section-dashboard">
+    <div class="stats">
+      <div class="stat-card blue">
+        <div class="stat-icon">📦</div>
+        <div class="stat-value" id="stat-products">0</div>
+        <div class="stat-label">المنتجات</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value" id="stat-confirmed">0</div>
+        <div class="stat-label">طلبات مؤكدة</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-value" id="stat-pending">0</div>
+        <div class="stat-label">طلبات معلقة</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value" id="stat-revenue">$0</div>
+        <div class="stat-label">إجمالي الإيرادات</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 آخر الطلبات</div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <table>
+            <thead><tr><th>رقم الطلب</th><th>العميل</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+            <tbody id="recent-orders-table">
+              <tr><td colspan="4" class="empty">لا توجد طلبات بعد</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚡ إجراءات سريعة</div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-primary" onclick="showSection('products');openAddProduct()">➕ إضافة منتج جديد</button>
+            <button class="btn btn-ghost" onclick="showSection('orders')">📋 عرض الطلبات المعلقة</button>
+            <button class="btn btn-ghost" onclick="showSection('payment')">💳 تحديث معلومات الدفع</button>
+            <button class="btn btn-ghost" onclick="showSection('settings')">⚙️ تعديل الإعدادات</button>
+            <div class="divider"></div>
+            <button class="btn btn-success" onclick="deployBot()">🚀 إعادة تشغيل البوت</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products Section -->
+  <div class="section" id="section-products">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <div style="font-size:18px;font-weight:700">📦 إدارة المنتجات</div>
+      <button class="btn btn-primary" onclick="openAddProduct()">➕ منتج جديد</button>
+    </div>
+    <div class="product-grid" id="products-grid">
+      <div class="loading"><div class="spinner"></div><br><br>جاري التحميل...</div>
+    </div>
+  </div>
+
+  <!-- Orders Section -->
+  <div class="section" id="section-orders">
+    <div style="margin-bottom:24px">
+      <div class="tabs">
+        <div class="tab active" onclick="filterOrders('all',this)">الكل</div>
+        <div class="tab" onclick="filterOrders('pending',this)">⏳ معلقة</div>
+        <div class="tab" onclick="filterOrders('awaiting_confirmation',this)">🔍 بانتظار التأكيد</div>
+        <div class="tab" onclick="filterOrders('confirmed',this)">✅ مؤكدة</div>
+        <div class="tab" onclick="filterOrders('rejected',this)">❌ مرفوضة</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead><tr><th>رقم الطلب</th><th>العميل</th><th>المنتجات</th><th>المبلغ</th><th>طريقة الدفع</th><th>التاريخ</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody id="orders-table">
+            <tr><td colspan="8" class="empty"><div class="empty-icon">📭</div><br>لا توجد طلبات</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Section -->
+  <div class="section" id="section-payment">
+    <div style="font-size:18px;font-weight:700;margin-bottom:24px">💳 طرق الدفع</div>
+    <div id="payment-forms">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- Settings Section -->
+  <div class="section" id="section-settings">
+    <div style="font-size:18px;font-weight:700;margin-bottom:24px">⚙️ الإعدادات العامة</div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">💬 رسالة الترحيب</div></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>نص الرسالة</label>
+            <textarea id="welcome-msg" rows="4"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">💾 حفظ</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">💱 سعر الصرف</div></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>سعر الدولار بالدينار الليبي</label>
+            <input type="number" id="usd-rate" step="0.01" placeholder="4.85">
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">💾 حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deploy Section -->
+  <div class="section" id="section-deploy">
+    <div style="font-size:18px;font-weight:700;margin-bottom:24px">🚀 نشر البوت على السيرفر</div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📋 أوامر التثبيت</div></div>
+      <div class="card-body">
+        <p style="color:var(--text2);margin-bottom:20px;font-size:14px">شغّل هذه الأوامر على السيرفر بالترتيب:</p>
+
+        <div style="margin-bottom:16px">
+          <label>1. تثبيت المكتبات</label>
+          <div style="background:var(--surface2);padding:14px;border-radius:10px;font-family:monospace;font-size:13px;color:#7dd3fc;position:relative">
+            pip3 install python-telegram-bot --break-system-packages
+            <button onclick="copyCmd(this)" style="position:absolute;left:10px;top:10px;background:transparent;border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px">نسخ</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px">
+          <label>2. إنشاء ملف البوت</label>
+          <div style="background:var(--surface2);padding:14px;border-radius:10px;font-family:monospace;font-size:13px;color:#7dd3fc;position:relative">
+            nano /root/shop_bot.py
+            <button onclick="copyCmd(this)" style="position:absolute;left:10px;top:10px;background:transparent;border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px">نسخ</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px">
+          <label>3. تشغيل البوت كـ service دائم</label>
+          <div style="background:var(--surface2);padding:14px;border-radius:10px;font-family:monospace;font-size:13px;color:#7dd3fc;position:relative;white-space:pre-wrap">cat > /etc/systemd/system/shopbot.service << 'EOF'
+[Unit]
+Description=Shop Bot
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root
+ExecStart=/usr/bin/python3 /root/shop_bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload && systemctl enable shopbot && systemctl start shopbot
+            <button onclick="copyCmd(this)" style="position:absolute;left:10px;top:10px;background:transparent;border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px">نسخ</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px">
+          <label>4. التحقق من حالة البوت</label>
+          <div style="background:var(--surface2);padding:14px;border-radius:10px;font-family:monospace;font-size:13px;color:#7dd3fc;position:relative">
+            systemctl status shopbot
+            <button onclick="copyCmd(this)" style="position:absolute;left:10px;top:10px;background:transparent;border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px">نسخ</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px">
+          <label>5. عرض السجلات المباشرة</label>
+          <div style="background:var(--surface2);padding:14px;border-radius:10px;font-family:monospace;font-size:13px;color:#7dd3fc;position:relative">
+            journalctl -u shopbot -f
+            <button onclick="copyCmd(this)" style="position:absolute;left:10px;top:10px;background:transparent;border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px">نسخ</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-success" onclick="downloadBot()">⬇️ تحميل ملف البوت</button>
+          <button class="btn btn-primary" onclick="downloadData()">⬇️ تحميل قاعدة البيانات</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Product Modal -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal">
+    <div class="modal-title"><span id="modal-emoji">➕</span> <span id="modal-title-text">إضافة منتج</span></div>
+    <input type="hidden" id="edit-pid">
+    <div class="input-row">
+      <div class="form-group">
+        <label>اسم المنتج</label>
+        <input type="text" id="p-name" placeholder="⚡ Windows 11 Pro">
+      </div>
+      <div class="form-group">
+        <label>الفئة</label>
+        <input type="text" id="p-category" placeholder="أنظمة التشغيل">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>الوصف</label>
+      <textarea id="p-desc" placeholder="وصف المنتج..."></textarea>
+    </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label>السعر (USD)</label>
+        <input type="number" id="p-price" placeholder="25.00" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>الحالة</label>
+        <select id="p-available">
+          <option value="true">✅ متوفر</option>
+          <option value="false">❌ غير متوفر</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('product-modal')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveProduct()">💾 حفظ المنتج</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────
+let shopData = {
+  products: {},
+  orders: {},
+  settings: {
+    payment_methods: {
+      usdt: { enabled: true, address: "", network: "TRC20" },
+      paypal: { enabled: true, email: "" },
+      binance: { enabled: true, id: "" },
+      libyana: { enabled: true, number: "", name: "" },
+      bank_transfer: { enabled: true, bank_name: "", account_name: "", account_number: "", iban: "" }
+    },
+    welcome_message: "مرحباً بك في متجرنا الإلكتروني! 🛒",
+    order_counter: 1000,
+    usd_to_lyd: 4.85
+  }
+};
+
+let currentOrderFilter = 'all';
+
+// ─── Init ─────────────────────────────────────────────────────────
+window.onload = () => {
+  loadFromStorage();
+  renderAll();
+};
+
+function loadFromStorage() {
+  const saved = localStorage.getItem('shopData');
+  if (saved) {
+    try { shopData = JSON.parse(saved); } catch(e) {}
+  }
+}
+
+function saveToStorage() {
+  localStorage.setItem('shopData', JSON.stringify(shopData));
+}
+
+// ─── Navigation ───────────────────────────────────────────────────
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  event.currentTarget && event.currentTarget.classList.add('active');
+
+  const titles = { dashboard:'لوحة التحكم', products:'المنتجات', orders:'الطلبات', payment:'طرق الدفع', settings:'الإعدادات', deploy:'النشر' };
+  const highlights = { dashboard:'التحكم', products:'المنتجات', orders:'الطلبات', payment:'الدفع', settings:'الإعدادات', deploy:'النشر' };
+  document.getElementById('pageTitle').innerHTML = titles[name].replace(highlights[name], `<span>${highlights[name]}</span>`);
+
+  if (name === 'products') renderProducts();
+  if (name === 'orders') renderOrders();
+  if (name === 'payment') renderPaymentForms();
+  if (name === 'settings') renderSettings();
+  if (name === 'dashboard') renderDashboard();
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────
+function renderDashboard() {
+  const orders = Object.values(shopData.orders);
+  const confirmed = orders.filter(o => o.status === 'confirmed');
+  const pending = orders.filter(o => ['pending','awaiting_confirmation'].includes(o.status));
+  const revenue = confirmed.reduce((s, o) => s + o.total, 0);
+
+  document.getElementById('stat-products').textContent = Object.keys(shopData.products).length;
+  document.getElementById('stat-confirmed').textContent = confirmed.length;
+  document.getElementById('stat-pending').textContent = pending.length;
+  document.getElementById('stat-revenue').textContent = '$' + revenue.toFixed(0);
+
+  const tbody = document.getElementById('recent-orders-table');
+  const recent = orders.slice(-5).reverse();
+  if (!recent.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty">لا توجد طلبات بعد</td></tr>';
+    return;
+  }
+  tbody.innerHTML = recent.map(o => `
+    <tr>
+      <td><code style="font-size:12px">${o.id}</code></td>
+      <td>@${o.username}</td>
+      <td>$${o.total.toFixed(2)}</td>
+      <td>${statusBadge(o.status)}</td>
+    </tr>
+  `).join('');
+}
+
+// ─── Products ─────────────────────────────────────────────────────
+function renderProducts() {
+  const grid = document.getElementById('products-grid');
+  const products = shopData.products;
+  if (!Object.keys(products).length) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><br>لا توجد منتجات. أضف منتجاً جديداً!</div>';
+    return;
+  }
+  grid.innerHTML = Object.entries(products).map(([pid, p]) => `
+    <div class="product-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div class="product-name">${p.name}</div>
+        <label class="toggle"><input type="checkbox" ${p.available ? 'checked' : ''} onchange="toggleProduct('${pid}',this.checked)"><span class="slider"></span></label>
+      </div>
+      <div class="product-desc">${p.description}</div>
+      <div class="product-price">$${p.price.toFixed(2)}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">📁 ${p.category}</div>
+      <div class="product-actions">
+        <button class="btn btn-ghost btn-sm" onclick="editProduct('${pid}')">✏️ تعديل</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${pid}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddProduct() {
+  document.getElementById('edit-pid').value = '';
+  document.getElementById('modal-emoji').textContent = '➕';
+  document.getElementById('modal-title-text').textContent = 'إضافة منتج جديد';
+  document.getElementById('p-name').value = '';
+  document.getElementById('p-category').value = '';
+  document.getElementById('p-desc').value = '';
+  document.getElementById('p-price').value = '';
+  document.getElementById('p-available').value = 'true';
+  document.getElementById('product-modal').classList.add('open');
+}
+
+function editProduct(pid) {
+  const p = shopData.products[pid];
+  document.getElementById('edit-pid').value = pid;
+  document.getElementById('modal-emoji').textContent = '✏️';
+  document.getElementById('modal-title-text').textContent = 'تعديل المنتج';
+  document.getElementById('p-name').value = p.name;
+  document.getElementById('p-category').value = p.category;
+  document.getElementById('p-desc').value = p.description;
+  document.getElementById('p-price').value = p.price;
+  document.getElementById('p-available').value = p.available ? 'true' : 'false';
+  document.getElementById('product-modal').classList.add('open');
+}
+
+function saveProduct() {
+  const pid = document.getElementById('edit-pid').value || 'p' + Date.now();
+  const name = document.getElementById('p-name').value.trim();
+  const price = parseFloat(document.getElementById('p-price').value);
+  if (!name || !price) { showToast('يرجى ملء جميع الحقول المطلوبة', 'error'); return; }
+  shopData.products[pid] = {
+    name, price, currency: 'USD',
+    description: document.getElementById('p-desc').value.trim(),
+    category: document.getElementById('p-category').value.trim() || 'عام',
+    available: document.getElementById('p-available').value === 'true'
+  };
+  saveToStorage();
+  closeModal('product-modal');
+  renderProducts();
+  showToast('✅ تم حفظ المنتج بنجاح');
+}
+
+function toggleProduct(pid, val) {
+  shopData.products[pid].available = val;
+  saveToStorage();
+  showToast(val ? '✅ المنتج متوفر الآن' : '❌ المنتج غير متوفر');
+}
+
+function deleteProduct(pid) {
+  if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
+  delete shopData.products[pid];
+  saveToStorage();
+  renderProducts();
+  showToast('🗑️ تم حذف المنتج', 'error');
+}
+
+// ─── Orders ───────────────────────────────────────────────────────
+function filterOrders(filter, el) {
+  currentOrderFilter = filter;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderOrders();
+}
+
+function renderOrders() {
+  const tbody = document.getElementById('orders-table');
+  let orders = Object.values(shopData.orders);
+  if (currentOrderFilter !== 'all') orders = orders.filter(o => o.status === currentOrderFilter);
+  orders = orders.reverse();
+
+  if (!orders.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty"><div class="empty-icon">📭</div><br>لا توجد طلبات</td></tr>';
+    return;
+  }
+
+  const methodLabels = { usdt:'USDT', paypal:'PayPal', binance:'Binance', libyana:'📱 ليبيانا', bank_transfer:'🏦 تحويل' };
+
+  tbody.innerHTML = orders.map(o => `
+    <tr>
+      <td><code style="font-size:12px">${o.id}</code></td>
+      <td>@${o.username}</td>
+      <td style="font-size:12px">${(o.items||[]).map(i=>i.name).join('<br>')}</td>
+      <td><strong>$${o.total.toFixed(2)}</strong></td>
+      <td>${methodLabels[o.payment_method] || o.payment_method}</td>
+      <td style="font-size:12px;color:var(--text2)">${new Date(o.created_at).toLocaleDateString('ar')}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td>
+        ${['pending','awaiting_confirmation'].includes(o.status) ? `
+          <button class="btn btn-success btn-sm" onclick="confirmOrder('${o.id}')">✅</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectOrder('${o.id}')">❌</button>
+        ` : '—'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function confirmOrder(id) {
+  shopData.orders[id].status = 'confirmed';
+  shopData.orders[id].confirmed_at = new Date().toISOString();
+  saveToStorage();
+  renderOrders();
+  renderDashboard();
+  showToast('✅ تم تأكيد الطلب');
+}
+
+function rejectOrder(id) {
+  shopData.orders[id].status = 'rejected';
+  saveToStorage();
+  renderOrders();
+  showToast('❌ تم رفض الطلب', 'error');
+}
+
+function statusBadge(status) {
+  const map = {
+    pending: ['badge-warning','⏳ معلق'],
+    awaiting_confirmation: ['badge-info','🔍 بانتظار التأكيد'],
+    confirmed: ['badge-success','✅ مؤكد'],
+    rejected: ['badge-danger','❌ مرفوض'],
+    delivered: ['badge-success','📬 تم التسليم']
+  };
+  const [cls, label] = map[status] || ['badge-info', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+// ─── Payment Forms ────────────────────────────────────────────────
+function renderPaymentForms() {
+  const pm = shopData.settings.payment_methods;
+  document.getElementById('payment-forms').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">💰 USDT (TRC20)</div>
+          <label class="toggle"><input type="checkbox" id="usdt-enabled" ${pm.usdt.enabled?'checked':''} onchange="savePayment()"><span class="slider"></span></label>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>عنوان المحفظة</label><input id="usdt-address" value="${pm.usdt.address}" placeholder="TRC20 Address" onchange="savePayment()"></div>
+          <div class="form-group"><label>الشبكة</label><input id="usdt-network" value="${pm.usdt.network}" onchange="savePayment()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🅿️ PayPal</div>
+          <label class="toggle"><input type="checkbox" id="paypal-enabled" ${pm.paypal.enabled?'checked':''} onchange="savePayment()"><span class="slider"></span></label>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>البريد الإلكتروني</label><input id="paypal-email" value="${pm.paypal.email}" placeholder="shop@example.com" onchange="savePayment()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🟡 Binance Pay</div>
+          <label class="toggle"><input type="checkbox" id="binance-enabled" ${pm.binance.enabled?'checked':''} onchange="savePayment()"><span class="slider"></span></label>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>Binance ID</label><input id="binance-id" value="${pm.binance.id}" placeholder="Binance Pay ID" onchange="savePayment()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📱 رصيد ليبيانا</div>
+          <label class="toggle"><input type="checkbox" id="libyana-enabled" ${pm.libyana.enabled?'checked':''} onchange="savePayment()"><span class="slider"></span></label>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>رقم الهاتف</label><input id="libyana-number" value="${pm.libyana.number}" placeholder="09XXXXXXXX" onchange="savePayment()"></div>
+          <div class="form-group"><label>اسم صاحب الرقم</label><input id="libyana-name" value="${pm.libyana.name}" onchange="savePayment()"></div>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column:span 2">
+        <div class="card-header">
+          <div class="card-title">🏦 التحويل المصرفي</div>
+          <label class="toggle"><input type="checkbox" id="bank-enabled" ${pm.bank_transfer.enabled?'checked':''} onchange="savePayment()"><span class="slider"></span></label>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group"><label>اسم المصرف</label><input id="bank-name" value="${pm.bank_transfer.bank_name}" onchange="savePayment()"></div>
+            <div class="form-group"><label>اسم الحساب</label><input id="bank-account-name" value="${pm.bank_transfer.account_name}" onchange="savePayment()"></div>
+            <div class="form-group"><label>رقم الحساب</label><input id="bank-account-num" value="${pm.bank_transfer.account_number}" onchange="savePayment()"></div>
+            <div class="form-group"><label>IBAN</label><input id="bank-iban" value="${pm.bank_transfer.iban}" onchange="savePayment()"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+function savePayment() {
+  const pm = shopData.settings.payment_methods;
+  pm.usdt.enabled = document.getElementById('usdt-enabled').checked;
+  pm.usdt.address = document.getElementById('usdt-address').value;
+  pm.usdt.network = document.getElementById('usdt-network').value;
+  pm.paypal.enabled = document.getElementById('paypal-enabled').checked;
+  pm.paypal.email = document.getElementById('paypal-email').value;
+  pm.binance.enabled = document.getElementById('binance-enabled').checked;
+  pm.binance.id = document.getElementById('binance-id').value;
+  pm.libyana.enabled = document.getElementById('libyana-enabled').checked;
+  pm.libyana.number = document.getElementById('libyana-number').value;
+  pm.libyana.name = document.getElementById('libyana-name').value;
+  pm.bank_transfer.enabled = document.getElementById('bank-enabled').checked;
+  pm.bank_transfer.bank_name = document.getElementById('bank-name').value;
+  pm.bank_transfer.account_name = document.getElementById('bank-account-name').value;
+  pm.bank_transfer.account_number = document.getElementById('bank-account-num').value;
+  pm.bank_transfer.iban = document.getElementById('bank-iban').value;
+  saveToStorage();
+  showToast('✅ تم حفظ إعدادات الدفع');
+}
+
+// ─── Settings ─────────────────────────────────────────────────────
+function renderSettings() {
+  document.getElementById('welcome-msg').value = shopData.settings.welcome_message;
+  document.getElementById('usd-rate').value = shopData.settings.usd_to_lyd;
+}
+
+function saveSettings() {
+  shopData.settings.welcome_message = document.getElementById('welcome-msg').value;
+  shopData.settings.usd_to_lyd = parseFloat(document.getElementById('usd-rate').value) || 4.85;
+  saveToStorage();
+  showToast('✅ تم حفظ الإعدادات');
+}
+
+// ─── Global Save ──────────────────────────────────────────────────
+function saveAll() {
+  saveToStorage();
+  showToast('✅ تم حفظ جميع التغييرات');
+}
+
+function deployBot() {
+  showToast('🚀 تم إرسال أمر إعادة التشغيل (يحتاج تنفيذ يدوي على السيرفر)');
+}
+
+// ─── Download ─────────────────────────────────────────────────────
+function downloadBot() {
+  fetch('shop_bot.py').then(r => r.text()).then(text => {
+    const a = document.createElement('a');
+    a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+    a.download = 'shop_bot.py';
+    a.click();
+  }).catch(() => showToast('تحميل الملف من هذه الصفحة غير متاح، استخدم SCP', 'error'));
+}
+
+function downloadData() {
+  const json = JSON.stringify(shopData, null, 2);
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+  a.download = 'shop_data.json';
+  a.click();
+  showToast('✅ تم تحميل قاعدة البيانات');
+}
+
+// ─── Modal ────────────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+});
+
+// ─── Toast ────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── Copy ─────────────────────────────────────────────────────────
+function copyCmd(btn) {
+  const code = btn.parentElement.textContent.replace('نسخ','').trim();
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = '✅';
+    setTimeout(() => btn.textContent = 'نسخ', 2000);
+  });
+}
+</script>
+</body>
+</html>
