@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛒 لوحة تحكم المتجر</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0e1a;--surface:#111827;--surface2:#1a2234;--accent:#3b82f6;--accent2:#10b981;--danger:#ef4444;--warning:#f59e0b;--text:#f1f5f9;--text2:#94a3b8;--border:#1e293b;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.sidebar{position:fixed;right:0;top:0;width:230px;height:100vh;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:100;}
+.logo{padding:24px 20px;border-bottom:1px solid var(--border);font-size:18px;font-weight:900;color:var(--accent);display:flex;align-items:center;gap:10px;}
+.nav{padding:12px;flex:1;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;cursor:pointer;color:var(--text2);font-size:14px;font-weight:600;transition:all 0.2s;margin-bottom:3px;}
+.nav-item:hover,.nav-item.active{background:rgba(59,130,246,0.15);color:var(--accent);}
+.main{margin-right:230px;padding:28px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:10px;}
+.page-title{font-size:22px;font-weight:900;}
+.page-title span{color:var(--accent);}
+.status-badge{display:flex;align-items:center;gap:8px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:var(--accent2);padding:7px 14px;border-radius:20px;font-size:13px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:transform 0.2s;}
+.stat-card:hover{transform:translateY(-2px);}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.blue::before{background:var(--accent);}
+.stat-card.green::before{background:var(--accent2);}
+.stat-card.yellow::before{background:var(--warning);}
+.stat-card.red::before{background:var(--danger);}
+.stat-icon{font-size:28px;margin-bottom:10px;}
+.stat-value{font-size:28px;font-weight:900;margin-bottom:4px;}
+.stat-label{color:var(--text2);font-size:12px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.card-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.card-body{padding:20px;}
+.tabs{display:flex;gap:4px;background:var(--surface2);padding:4px;border-radius:10px;margin-bottom:20px;flex-wrap:wrap;}
+.tab{flex:1;padding:9px;border-radius:7px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);transition:all 0.2s;min-width:80px;}
+.tab.active{background:var(--accent);color:white;}
+.form-group{margin-bottom:14px;}
+label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:600;}
+input,select,textarea{width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:14px;transition:border-color 0.2s;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+textarea{resize:vertical;min-height:70px;}
+.btn{padding:9px 18px;border-radius:9px;border:none;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;transition:all 0.2s;display:inline-flex;align-items:center;gap:7px;}
+.btn-primary{background:var(--accent);color:white;}
+.btn-primary:hover{background:#2563eb;}
+.btn-success{background:var(--accent2);color:white;}
+.btn-danger{background:var(--danger);color:white;}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:5px 12px;font-size:12px;}
+table{width:100%;border-collapse:collapse;}
+th{padding:11px 14px;text-align:right;font-size:11px;color:var(--text2);font-weight:700;border-bottom:1px solid var(--border);}
+td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+.badge{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block;}
+.badge-success{background:rgba(16,185,129,0.15);color:var(--accent2);}
+.badge-warning{background:rgba(245,158,11,0.15);color:var(--warning);}
+.badge-danger{background:rgba(239,68,68,0.15);color:var(--danger);}
+.badge-info{background:rgba(59,130,246,0.15);color:var(--accent);}
+.toggle{position:relative;display:inline-block;width:40px;height:22px;}
+.toggle input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;inset:0;background:#374151;border-radius:22px;transition:0.3s;}
+.slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;}
+input:checked+.slider{background:var(--accent2);}
+input:checked+.slider:before{transform:translateX(18px);}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+.product-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:18px;transition:all 0.2s;}
+.product-card:hover{border-color:var(--accent);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;justify-content:center;align-items:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px;width:90%;max-width:480px;animation:slideUp 0.3s ease;max-height:90vh;overflow-y:auto;}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-title{font-size:18px;font-weight:900;margin-bottom:20px;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+.toast{position:fixed;bottom:20px;left:20px;z-index:300;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;transform:translateY(100px);opacity:0;transition:all 0.3s;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{border-color:var(--accent2);color:var(--accent2);}
+.toast.error{border-color:var(--danger);color:var(--danger);}
+.spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.section{display:none;}
+.section.active{display:block;}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+.empty{text-align:center;padding:32px;color:var(--text2);font-size:13px;}
+.preview-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;color:var(--text2);margin-top:10px;line-height:1.8;}
+.preview-box strong{color:var(--text);}
+@media(max-width:768px){.sidebar{display:none;}.main{margin-right:0;padding:14px;}.stats{grid-template-columns:repeat(2,1fr);}.grid2{grid-template-columns:1fr;}.input-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">🛒 لوحة المتجر</div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="showSection('dashboard',this)"><span>📊</span> الرئيسية</div>
+    <div class="nav-item" onclick="showSection('products',this)"><span>📦</span> المنتجات</div>
+    <div class="nav-item" onclick="showSection('orders',this)"><span>📋</span> الطلبات</div>
+    <div class="nav-item" onclick="showSection('payment',this)"><span>💳</span> طرق الدفع</div>
+    <div class="nav-item" onclick="showSection('support',this)"><span>💬</span> الدعم الفني</div>
+    <div class="nav-item" onclick="showSection('settings',this)"><span>⚙️</span> الإعدادات</div>
+  </nav>
+  <div style="padding:12px;border-top:1px solid var(--border)">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:6px">API Server</div>
+    <input id="api-url-input" value="http://76.13.50.67:5000" style="font-size:11px;padding:6px 10px" onchange="API_URL=this.value;loadData()">
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">لوحة <span>التحكم</span></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <div class="status-badge" id="api-status"><div class="dot" style="background:var(--warning)"></div> جاري الاتصال...</div>
+      <button class="btn btn-primary btn-sm" onclick="saveData()">💾 حفظ الكل</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadData()">🔄 تحديث</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="section active" id="section-dashboard">
+    <div class="stats">
+      <div class="stat-card blue"><div class="stat-icon">📦</div><div class="stat-value" id="s-products">-</div><div class="stat-label">المنتجات</div></div>
+      <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="s-confirmed">-</div><div class="stat-label">مؤكدة</div></div>
+      <div class="stat-card yellow"><div class="stat-icon">⏳</div><div class="stat-value" id="s-pending">-</div><div class="stat-label">معلقة</div></div>
+      <div class="stat-card red"><div class="stat-icon">💰</div><div class="stat-value" id="s-revenue">-</div><div class="stat-label">الإيرادات</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">📋 آخر الطلبات</div></div>
+        <div style="padding:0"><table><thead><tr><th>رقم الطلب</th><th>العميل</th><th>المبلغ</th><th>الحالة</th></tr></thead><tbody id="recent-orders"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">⚡ إجراءات سريعة</div></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:9px">
+          <button class="btn btn-primary" onclick="showSection('products',null);openAddProduct()">➕ منتج جديد</button>
+          <button class="btn btn-ghost" onclick="showSection('orders',null)">📋 الطلبات المعلقة</button>
+          <button class="btn btn-ghost" onclick="showSection('support',null)">💬 تعديل الدعم الفني</button>
+          <button class="btn btn-ghost" onclick="showSection('settings',null)">⚙️ الإعدادات</button>
+          <div class="divider"></div>
+          <button class="btn btn-success" onclick="restartBot()">🔄 إعادة تشغيل البوت</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products -->
+  <div class="section" id="section-products">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-size:17px;font-weight:700">📦 المنتجات</div>
+      <button class="btn btn-primary" onclick="openAddProduct()">➕ منتج جديد</button>
+    </div>
+    <div class="product-grid" id="products-grid"><div class="empty"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- Orders -->
+  <div class="section" id="section-orders">
+    <div class="tabs">
+      <div class="tab active" onclick="filterOrders('all',this)">الكل</div>
+      <div class="tab" onclick="filterOrders('pending',this)">⏳ معلقة</div>
+      <div class="tab" onclick="filterOrders('awaiting_confirmation',this)">🔍 انتظار</div>
+      <div class="tab" onclick="filterOrders('confirmed',this)">✅ مؤكدة</div>
+      <div class="tab" onclick="filterOrders('rejected',this)">❌ مرفوضة</div>
+    </div>
+    <div class="card"><div style="padding:0;overflow-x:auto"><table><thead><tr><th>رقم الطلب</th><th>العميل</th><th>المنتجات</th><th>المبلغ</th><th>الدفع</th><th>التاريخ</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="orders-table"></tbody></table></div></div>
+  </div>
+
+  <!-- Payment -->
+  <div class="section" id="section-payment">
+    <div style="font-size:17px;font-weight:700;margin-bottom:20px">💳 طرق الدفع</div>
+    <div id="payment-forms"><div class="empty"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- Support -->
+  <div class="section" id="section-support">
+    <div style="font-size:17px;font-weight:700;margin-bottom:20px">💬 الدعم الفني</div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">📱 بيانات التواصل</div></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>حساب تيليجرام (بدون @)</label>
+            <input id="sup-tg" placeholder="h_q_k" oninput="previewSupport()">
+          </div>
+          <div class="form-group">
+            <label>البريد الإلكتروني</label>
+            <input id="sup-email" placeholder="example@gmail.com" oninput="previewSupport()">
+          </div>
+          <div class="form-group">
+            <label>نص رسالة الدعم في البوت</label>
+            <textarea id="sup-text" rows="4" placeholder="نحن هنا لمساعدتك..." oninput="previewSupport()"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveSupport()">💾 حفظ وتطبيق على البوت</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">👁️ معاينة في البوت</div></div>
+        <div class="card-body">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px">هكذا ستظهر رسالة الدعم للمستخدم:</div>
+          <div class="preview-box" id="support-preview">
+            💬 <strong>الدعم الفني</strong><br>
+            ━━━━━━━━━━━━━━━━<br>
+            <span id="prev-text">نص الرسالة هنا...</span><br><br>
+            📱 تيليجرام: @<span id="prev-tg">username</span><br>
+            📧 الإيميل: <span id="prev-email">email@example.com</span><br>
+            ⏰ متاحون: 24/7
+          </div>
+          <div style="margin-top:16px">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:8px">معلومات "من نحن":</div>
+            <div class="form-group">
+              <label>نص من نحن</label>
+              <textarea id="sup-about" rows="4" placeholder="نبذة عن المتجر..." oninput="previewSupport()"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="section" id="section-settings">
+    <div style="font-size:17px;font-weight:700;margin-bottom:20px">⚙️ الإعدادات العامة</div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">💬 رسالة الترحيب</div></div>
+        <div class="card-body">
+          <div class="form-group"><label>النص الذي يراه المستخدم عند /start</label><textarea id="welcome-msg" rows="4"></textarea></div>
+          <button class="btn btn-primary" onclick="saveData()">💾 حفظ</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">💱 سعر الصرف</div></div>
+        <div class="card-body">
+          <div class="form-group"><label>سعر الدولار بالدينار الليبي</label><input type="number" id="usd-rate" step="0.01" placeholder="4.85"></div>
+          <div id="rate-preview" style="color:var(--accent2);font-size:13px;margin-bottom:12px"></div>
+          <button class="btn btn-primary" onclick="saveData()">💾 حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">➕ إضافة منتج</div>
+    <input type="hidden" id="edit-pid">
+    <div class="input-row">
+      <div class="form-group"><label>اسم المنتج</label><input id="p-name" placeholder="⚡ Windows 11 Pro"></div>
+      <div class="form-group"><label>الفئة</label><input id="p-category" placeholder="أنظمة التشغيل"></div>
+    </div>
+    <div class="form-group"><label>الوصف</label><textarea id="p-desc"></textarea></div>
+    <div class="input-row">
+      <div class="form-group"><label>السعر (USD)</label><input type="number" id="p-price" step="0.01"></div>
+      <div class="form-group"><label>الحالة</label><select id="p-available"><option value="true">✅ متوفر</option><option value="false">❌ غير متوفر</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveProduct()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let API_URL = 'http://76.13.50.67:5000';
+let shopData = {products:{},orders:{},settings:{payment_methods:{usdt:{enabled:true,address:'',network:'TRC20'},paypal:{enabled:true,email:''},binance:{enabled:true,id:''},libyana:{enabled:true,number:'',name:''},bank_transfer:{enabled:true,bank_name:'',account_name:'',account_number:'',iban:''}},welcome_message:'',order_counter:1000,usd_to_lyd:4.85,support:{telegram:'h_q_k',email:'',about_text:''}}};
+let orderFilter='all';
+
+async function loadData(){
+  try{
+    const r=await fetch(API_URL+'/api/data');
+    if(!r.ok)throw new Error();
+    const d=await r.json();
+    if(d&&Object.keys(d).length)shopData=d;
+    if(!shopData.settings.support)shopData.settings.support={telegram:'h_q_k',email:'',about_text:''};
+    setStatus(true);renderAll();
+    showToast('✅ تم تحميل البيانات');
+  }catch{setStatus(false);showToast('⚠️ تعذر الاتصال بالـ API','error');}
+}
+
+async function saveData(){
+  collectAll();
+  try{
+    const r=await fetch(API_URL+'/api/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(shopData)});
+    if(!r.ok)throw new Error();
+    showToast('✅ تم الحفظ على السيرفر');
+  }catch{showToast('❌ فشل الحفظ','error');}
+}
+
+async function restartBot(){
+  try{await fetch(API_URL+'/api/restart');showToast('🔄 تم إعادة تشغيل البوت');}
+  catch{showToast('❌ فشل','error');}
+}
+
+function setStatus(ok){
+  const el=document.getElementById('api-status');
+  el.innerHTML=ok?'<div class="dot"></div> متصل بالسيرفر':'<div class="dot" style="background:var(--danger)"></div> غير متصل';
+  el.style.color=ok?'var(--accent2)':'var(--danger)';
+  el.style.borderColor=ok?'rgba(16,185,129,0.3)':'rgba(239,68,68,0.3)';
+  el.style.background=ok?'rgba(16,185,129,0.15)':'rgba(239,68,68,0.15)';
+}
+
+function showSection(name,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('section-'+name).classList.add('active');
+  if(el)el.classList.add('active');
+  else document.querySelectorAll('.nav-item').forEach(n=>{if(n.textContent.includes(name))n.classList.add('active');});
+  const titles={dashboard:'لوحة <span>التحكم</span>',products:'إدارة <span>المنتجات</span>',orders:'<span>الطلبات</span>',payment:'طرق <span>الدفع</span>',support:'<span>الدعم الفني</span>',settings:'<span>الإعدادات</span>'};
+  document.getElementById('pageTitle').innerHTML=titles[name]||name;
+  if(name==='products')renderProducts();
+  if(name==='orders')renderOrders();
+  if(name==='payment')renderPaymentForms();
+  if(name==='support')renderSupport();
+  if(name==='settings')renderSettings();
+  if(name==='dashboard')renderDashboard();
+}
+
+function renderAll(){renderDashboard();}
+
+function renderDashboard(){
+  const orders=Object.values(shopData.orders||{});
+  document.getElementById('s-products').textContent=Object.keys(shopData.products||{}).length;
+  document.getElementById('s-confirmed').textContent=orders.filter(o=>o.status==='confirmed').length;
+  document.getElementById('s-pending').textContent=orders.filter(o=>['pending','awaiting_confirmation'].includes(o.status)).length;
+  document.getElementById('s-revenue').textContent='$'+orders.filter(o=>o.status==='confirmed').reduce((s,o)=>s+o.total,0).toFixed(0);
+  const tbody=document.getElementById('recent-orders');
+  const recent=orders.slice(-5).reverse();
+  tbody.innerHTML=recent.length?recent.map(o=>`<tr><td><code style="font-size:11px">${o.id}</code></td><td>@${o.username||'-'}</td><td>$${o.total?.toFixed(2)||0}</td><td>${statusBadge(o.status)}</td></tr>`).join(''):'<tr><td colspan="4" class="empty">لا توجد طلبات</td></tr>';
+}
+
+function renderProducts(){
+  const grid=document.getElementById('products-grid');
+  const prods=shopData.products||{};
+  if(!Object.keys(prods).length){grid.innerHTML='<div class="empty">📦<br><br>لا توجد منتجات</div>';return;}
+  grid.innerHTML=Object.entries(prods).map(([pid,p])=>`
+    <div class="product-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="font-size:14px;font-weight:700">${p.name}</div>
+        <label class="toggle"><input type="checkbox" ${p.available?'checked':''} onchange="toggleProduct('${pid}',this.checked)"><span class="slider"></span></label>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">${p.description||''}</div>
+      <div style="font-size:18px;font-weight:900;color:var(--accent);margin-bottom:4px">$${p.price?.toFixed(2)||0}</div>
+      <div style="font-size:11px;color:var(--accent2);margin-bottom:12px">🇱🇾 ${(p.price*(shopData.settings?.usd_to_lyd||4.85)).toFixed(2)} د.ل</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:12px">📁 ${p.category||'عام'}</div>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-ghost btn-sm" onclick="editProduct('${pid}')">✏️ تعديل</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${pid}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function openAddProduct(){
+  document.getElementById('edit-pid').value='';
+  document.getElementById('modal-title').textContent='➕ إضافة منتج';
+  ['p-name','p-category','p-desc','p-price'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('p-available').value='true';
+  document.getElementById('product-modal').classList.add('open');
+}
+
+function editProduct(pid){
+  const p=shopData.products[pid];
+  document.getElementById('edit-pid').value=pid;
+  document.getElementById('modal-title').textContent='✏️ تعديل المنتج';
+  document.getElementById('p-name').value=p.name;
+  document.getElementById('p-category').value=p.category;
+  document.getElementById('p-desc').value=p.description;
+  document.getElementById('p-price').value=p.price;
+  document.getElementById('p-available').value=p.available?'true':'false';
+  document.getElementById('product-modal').classList.add('open');
+}
+
+function saveProduct(){
+  const pid=document.getElementById('edit-pid').value||'p'+Date.now();
+  const name=document.getElementById('p-name').value.trim();
+  const price=parseFloat(document.getElementById('p-price').value);
+  if(!name||!price){showToast('يرجى ملء الحقول المطلوبة','error');return;}
+  shopData.products[pid]={name,price,currency:'USD',description:document.getElementById('p-desc').value.trim(),category:document.getElementById('p-category').value.trim()||'عام',available:document.getElementById('p-available').value==='true'};
+  closeModal();renderProducts();saveData();
+}
+
+function toggleProduct(pid,val){
+  shopData.products[pid].available=val;
+  saveData();
+  showToast(val?'✅ المنتج متوفر':'❌ المنتج غير متوفر');
+}
+
+function deleteProduct(pid){
+  if(!confirm('هل أنت متأكد؟'))return;
+  delete shopData.products[pid];
+  renderProducts();saveData();
+  showToast('🗑️ تم الحذف','error');
+}
+
+function filterOrders(f,el){
+  orderFilter=f;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderOrders();
+}
+
+function renderOrders(){
+  const tbody=document.getElementById('orders-table');
+  let orders=Object.values(shopData.orders||{});
+  if(orderFilter!=='all')orders=orders.filter(o=>o.status===orderFilter);
+  orders=orders.reverse();
+  const ml={usdt:'USDT',paypal:'PayPal',binance:'Binance',libyana:'📱 ليبيانا',bank_transfer:'🏦 تحويل'};
+  tbody.innerHTML=orders.length?orders.map(o=>`
+    <tr>
+      <td><code style="font-size:11px">${o.id}</code></td>
+      <td>@${o.username||'-'}</td>
+      <td style="font-size:11px">${(o.items||[]).map(i=>i.name).join('<br>')}</td>
+      <td><strong>$${o.total?.toFixed(2)||0}</strong></td>
+      <td>${ml[o.payment_method]||'-'}</td>
+      <td style="font-size:11px;color:var(--text2)">${o.created_at?new Date(o.created_at).toLocaleDateString('ar'):'-'}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td>${['pending','awaiting_confirmation'].includes(o.status)?`<button class="btn btn-success btn-sm" onclick="confirmOrder('${o.id}')">✅</button> <button class="btn btn-danger btn-sm" onclick="rejectOrder('${o.id}')">❌</button>`:'—'}</td>
+    </tr>`).join(''):'<tr><td colspan="8" class="empty">📭<br><br>لا توجد طلبات</td></tr>';
+}
+
+function confirmOrder(id){shopData.orders[id].status='confirmed';shopData.orders[id].confirmed_at=new Date().toISOString();renderOrders();renderDashboard();saveData();showToast('✅ تم تأكيد الطلب');}
+function rejectOrder(id){shopData.orders[id].status='rejected';renderOrders();saveData();showToast('❌ تم رفض الطلب','error');}
+
+function statusBadge(s){
+  const m={pending:['badge-warning','⏳ معلق'],awaiting_confirmation:['badge-info','🔍 انتظار'],confirmed:['badge-success','✅ مؤكد'],rejected:['badge-danger','❌ مرفوض']};
+  const[c,l]=m[s]||['badge-info',s];
+  return `<span class="badge ${c}">${l}</span>`;
+}
+
+function renderPaymentForms(){
+  const pm=shopData.settings?.payment_methods||{};
+  document.getElementById('payment-forms').innerHTML=`
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="card"><div class="card-header"><div class="card-title">💰 USDT</div><label class="toggle"><input type="checkbox" id="usdt-e" ${pm.usdt?.enabled?'checked':''} onchange="savePayment()"><span class="slider"></span></label></div><div class="card-body"><div class="form-group"><label>العنوان</label><input id="usdt-a" value="${pm.usdt?.address||''}" onchange="savePayment()"></div><div class="form-group"><label>الشبكة</label><input id="usdt-n" value="${pm.usdt?.network||'TRC20'}" onchange="savePayment()"></div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">🅿️ PayPal</div><label class="toggle"><input type="checkbox" id="pp-e" ${pm.paypal?.enabled?'checked':''} onchange="savePayment()"><span class="slider"></span></label></div><div class="card-body"><div class="form-group"><label>الإيميل</label><input id="pp-email" value="${pm.paypal?.email||''}" onchange="savePayment()"></div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">🟡 Binance</div><label class="toggle"><input type="checkbox" id="bn-e" ${pm.binance?.enabled?'checked':''} onchange="savePayment()"><span class="slider"></span></label></div><div class="card-body"><div class="form-group"><label>Binance ID</label><input id="bn-id" value="${pm.binance?.id||''}" onchange="savePayment()"></div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">📱 ليبيانا</div><label class="toggle"><input type="checkbox" id="ly-e" ${pm.libyana?.enabled?'checked':''} onchange="savePayment()"><span class="slider"></span></label></div><div class="card-body"><div class="form-group"><label>رقم الهاتف</label><input id="ly-num" value="${pm.libyana?.number||''}" onchange="savePayment()"></div><div class="form-group"><label>الاسم</label><input id="ly-name" value="${pm.libyana?.name||''}" onchange="savePayment()"></div></div></div>
+    <div class="card" style="grid-column:span 2"><div class="card-header"><div class="card-title">🏦 التحويل المصرفي</div><label class="toggle"><input type="checkbox" id="bk-e" ${pm.bank_transfer?.enabled?'checked':''} onchange="savePayment()"><span class="slider"></span></label></div><div class="card-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="form-group"><label>المصرف</label><input id="bk-name" value="${pm.bank_transfer?.bank_name||''}" onchange="savePayment()"></div><div class="form-group"><label>اسم الحساب</label><input id="bk-aname" value="${pm.bank_transfer?.account_name||''}" onchange="savePayment()"></div><div class="form-group"><label>رقم الحساب</label><input id="bk-anum" value="${pm.bank_transfer?.account_number||''}" onchange="savePayment()"></div><div class="form-group"><label>IBAN</label><input id="bk-iban" value="${pm.bank_transfer?.iban||''}" onchange="savePayment()"></div></div></div></div>
+  </div>`;
+}
+
+function savePayment(){
+  const pm=shopData.settings.payment_methods;
+  pm.usdt={enabled:document.getElementById('usdt-e').checked,address:document.getElementById('usdt-a').value,network:document.getElementById('usdt-n').value};
+  pm.paypal={enabled:document.getElementById('pp-e').checked,email:document.getElementById('pp-email').value};
+  pm.binance={enabled:document.getElementById('bn-e').checked,id:document.getElementById('bn-id').value};
+  pm.libyana={enabled:document.getElementById('ly-e').checked,number:document.getElementById('ly-num').value,name:document.getElementById('ly-name').value};
+  pm.bank_transfer={enabled:document.getElementById('bk-e').checked,bank_name:document.getElementById('bk-name').value,account_name:document.getElementById('bk-aname').value,account_number:document.getElementById('bk-anum').value,iban:document.getElementById('bk-iban').value};
+  saveData();
+}
+
+// ── Support ──────────────────────────────────────────────────────
+function renderSupport(){
+  const sup=shopData.settings?.support||{};
+  document.getElementById('sup-tg').value=sup.telegram||'';
+  document.getElementById('sup-email').value=sup.email||'';
+  document.getElementById('sup-text').value=sup.support_text||'نحن هنا لمساعدتك على مدار الساعة!';
+  document.getElementById('sup-about').value=sup.about_text||'';
+  previewSupport();
+}
+
+function previewSupport(){
+  const tg=document.getElementById('sup-tg')?.value||'username';
+  const email=document.getElementById('sup-email')?.value||'email@example.com';
+  const text=document.getElementById('sup-text')?.value||'نص الرسالة هنا...';
+  if(document.getElementById('prev-tg'))document.getElementById('prev-tg').textContent=tg;
+  if(document.getElementById('prev-email'))document.getElementById('prev-email').textContent=email;
+  if(document.getElementById('prev-text'))document.getElementById('prev-text').textContent=text;
+}
+
+function saveSupport(){
+  if(!shopData.settings.support)shopData.settings.support={};
+  shopData.settings.support.telegram=document.getElementById('sup-tg').value;
+  shopData.settings.support.email=document.getElementById('sup-email').value;
+  shopData.settings.support.support_text=document.getElementById('sup-text').value;
+  shopData.settings.support.about_text=document.getElementById('sup-about').value;
+  saveData();
+}
+
+function renderSettings(){
+  document.getElementById('welcome-msg').value=shopData.settings?.welcome_message||'';
+  const rate=shopData.settings?.usd_to_lyd||4.85;
+  document.getElementById('usd-rate').value=rate;
+  document.getElementById('rate-preview').textContent=`مثال: $10 = ${(10*rate).toFixed(2)} د.ل`;
+}
+
+document.getElementById('usd-rate')?.addEventListener('input',function(){
+  const rate=parseFloat(this.value)||4.85;
+  document.getElementById('rate-preview').textContent=`مثال: $10 = ${(10*rate).toFixed(2)} د.ل`;
+});
+
+function collectAll(){
+  if(document.getElementById('welcome-msg'))shopData.settings.welcome_message=document.getElementById('welcome-msg').value;
+  if(document.getElementById('usd-rate'))shopData.settings.usd_to_lyd=parseFloat(document.getElementById('usd-rate').value)||4.85;
+  if(document.getElementById('sup-tg')){
+    if(!shopData.settings.support)shopData.settings.support={};
+    shopData.settings.support.telegram=document.getElementById('sup-tg').value;
+    shopData.settings.support.email=document.getElementById('sup-email').value;
+    shopData.settings.support.support_text=document.getElementById('sup-text').value;
+    shopData.settings.support.about_text=document.getElementById('sup-about').value;
+  }
+}
+
+function closeModal(){document.getElementById('product-modal').classList.remove('open');}
+document.getElementById('product-modal').addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))closeModal();});
+
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+type;
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+loadData();
+setInterval(loadData,30000);
+</script>
+</body>
+</html>
